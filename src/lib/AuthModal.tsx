@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../supabase';
 import { X, Lock, Mail } from 'lucide-react';
 
 interface AuthModalProps {
@@ -12,23 +12,47 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
 
-    if (supabase) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        // Try sign up if sign in fails
-        await supabase.auth.signUp({ email, password });
-      }
+    if (!supabase) {
+      setErrorMessage('Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
+      setLoading(false);
+      return;
     }
+
+    // Try sign in first
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    if (!signInError) {
+      setLoading(false);
+      onSuccess(email);
+      onClose();
+      return;
+    }
+
+    // If sign in fails because user doesn't exist, try sign up
+    if (signInError.message?.includes('Invalid login credentials')) {
+      const { error: signUpError } = await supabase.auth.signUp({ email, password });
+      if (signUpError) {
+        setErrorMessage(signUpError.message);
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+      onSuccess(email);
+      onClose();
+      return;
+    }
+
+    // Other sign-in errors
+    setErrorMessage(signInError.message || 'Authentication failed');
     setLoading(false);
-    onSuccess(email);
-    onClose();
   };
 
   return (
@@ -72,10 +96,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
             </div>
           </div>
 
+          {errorMessage && (
+            <p className="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg">{errorMessage}</p>
+          )}
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition"
+            className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
           >
             {loading ? 'Processing...' : 'Continue'}
           </button>

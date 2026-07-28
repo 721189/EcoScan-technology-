@@ -17,6 +17,7 @@ export interface EnvironmentalData {
     windSpeed: number;
     windDirection: number;
     uvIndex: number;
+    heatIndex: number;
   };
   airQuality: {
     aqi: number;
@@ -34,6 +35,7 @@ export interface EnvironmentalData {
     temp: number[];
     uv: number[];
     wind: number[];
+    heatIndex: number[];
   };
 }
 

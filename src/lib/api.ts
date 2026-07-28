@@ -61,7 +61,7 @@ export async function fetchEnvironmentalData(lat: number, lon: number, locationN
     riskLevel: calculateRiskLevel(aqiVal),
     hourlyTrends: {
       time: times,
-      aqi: aq.hourly?.us_aqi || [],
+      aqi: (aq.hourly?.us_aqi || []).map((v: number) => Math.round(v)),
       temp: weather.hourly?.temperature_2m || [],
       uv: weather.hourly?.uv_index || [],
       wind: weather.hourly?.wind_speed_10m || [],
