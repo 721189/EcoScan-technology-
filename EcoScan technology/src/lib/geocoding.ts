@@ -6,7 +6,7 @@ export interface GeocodingResult {
   state?: string;
 }
 
-const API_KEY = '4b4fd59b29bcea765d85372cd46398b2';
+const API_KEY = '70f003f01b511a516d53cfd5ccab2f97';
 const BASE_URL = 'https://api.openweathermap.org/geo/1.0';
 
 /**
